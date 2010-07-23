@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	opts.Shortopt("h", "get help", "false")
+	opts.Shortflag("h", "get help")
 	opts.Parse()
 	fmt.Printf("Xname: %s\n", opts.Xname)
 	for i := 0; i < len(opts.Args); i++ {
