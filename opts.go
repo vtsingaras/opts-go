@@ -1,7 +1,9 @@
+// License under the GNU GPL v2 or (at your choice) any 
+// later version - see LICENSE.
+
 /*
 	Basic GNU and POSIX option parsing
 */
-
 package opts
 
 import (
@@ -42,7 +44,7 @@ var Args vector.StringVector
 // Creates a flag with the specified short and long forms
 func Flag(shortflag string, longflag string, desc string) *bool {
 	dest := new(bool)
-	flag := FlagOpt{shortflag,longflag,desc,dest}
+	flag := FlagOpt{shortflag, longflag, desc, dest}
 	// insert the items into the map
 	flags[shortflag] = flag
 	flags[longflag] = flag
@@ -62,7 +64,7 @@ func Longflag(longflag string, desc string) {
 // Creates an option with the specified short and long forms
 func Option(shortopt string, longopt string, desc string, dflt string) *string {
 	dest := new(string)
-	opt := VarOpt{shortopt,longopt,desc,dflt,dest}
+	opt := VarOpt{shortopt, longopt, desc, dflt, dest}
 	// insert the items into the map
 	options[shortopt] = opt
 	options[longopt] = opt
