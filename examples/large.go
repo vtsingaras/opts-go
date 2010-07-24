@@ -12,11 +12,8 @@ func main() {
 	world := opts.Shortopt("v", "the string to use instead of 'world'", "world")
 	file := opts.Option("f", "file", "a file to be looked at", "myfile")
 	quiet := opts.Shortflag("q", "be quiet")
+	opts.Description("a sample program")
 	opts.Parse()
-	fmt.Printf("Xname: %s\n", opts.Xname)
-	for i := 0; i < len(opts.Args); i++ {
-		fmt.Printf("Argument: %s\n", opts.Args[i])
-	}
 	if *help {
 		opts.Help()
 		os.Exit(0)

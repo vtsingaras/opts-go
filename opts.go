@@ -39,8 +39,24 @@ var options map[string]VarOpt = map[string]VarOpt{}
 // The name with which this program was called
 var Xname string
 
-// The list of optionless Argument provided
+// A description of the program, which may be multiline
+var description string
+
+// A string with the usage of the program
+var usage string = os.Args[0]+" [options]"
+
+// The list of optionless arguments provided
 var Args vector.StringVector
+
+// Sets the program usage to the given string, prefixed with 'usage: '
+func Usage(u string) {
+	usage = "usage: "+u
+}
+
+// Sets the program description to an arbitrary string.
+func Description(desc string) {
+	description = desc
+}
 
 // Creates a flag with the specified short and long forms
 func Flag(shortflag string, longflag string, desc string) *bool {
@@ -169,5 +185,6 @@ func Parse() {
 
 // Prints a generated help screen, from the options previously passed
 func Help() {
-	fmt.Printf("Help screen not yet implemented\n")
+	fmt.Printf("%s\n%s\n",usage,description)
+	// TODO FIXME create actual help screen
 }
