@@ -83,11 +83,6 @@ func Longopt(opt string, desc string, dflt string) *string {
 	return Option("", opt, desc, dflt)
 }
 
-func handleArgument(arg string) {
-	// push on the end of the vector
-	Args.Push(arg)
-}
-
 func invalidOption(opt string, optnum int) {
 	fmt.Printf("Unknown option: %s\n", opt)
 	os.Exit(1)
@@ -165,10 +160,9 @@ func Parse() {
 				i += handleOption(i)
 			}
 		} else {
-			handleArgument(arg)
+			Args.Push(arg)
 		}
 	}
-	fmt.Printf("placeholder\n")
 }
 
 // Prints a generated help screen, from the options previously passed
