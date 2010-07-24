@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"tabwriter"
 )
 
@@ -132,13 +133,16 @@ func handleOption(optnum int) int {
 	opt := os.Args[optnum]
 	if opt[1] == '-' {
 		// this is a single long argument
+		// get rid of any =
+		_opt := strings.Split(opt,"=",2)
+		opt = _opt[0]
 		// check the flags list
 		if flag, ok := flags[opt]; ok {
 			*flag.destination = true
 		} else if option, ok := options[opt]; ok {
 			// get the next value
-			assignValue(opt, option.destination, optnum+1)
-			return 1
+			*option.destination = _opt[1]
+			return 0
 		} else {
 			// This option doesn't exist
 			invalidOption(opt, optnum)

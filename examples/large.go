@@ -9,7 +9,7 @@ import (
 func main() {
 	help := opts.Flag("h", "help", "get help")
 	v := opts.Longflag("version", "print version information")
-	world := opts.Shortopt("v", "the string to use instead of 'world'", "world")
+	world := opts.Option("v", "value", "the string to use instead of 'world'", "world")
 	file := opts.Option("f", "file", "a file to be looked at", "myfile")
 	quiet := opts.Shortflag("q", "be quiet")
 	opts.Description("a sample program")
