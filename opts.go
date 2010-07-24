@@ -141,7 +141,11 @@ func handleOption(optnum int) int {
 			*flag.destination = true
 		} else if option, ok := options[opt]; ok {
 			// get the next value
-			*option.destination = _opt[1]
+			if len(_opt) > 1 {
+				*option.destination = _opt[1]
+			} else {
+				needArgument(opt)
+			}
 			return 0
 		} else {
 			// This option doesn't exist
