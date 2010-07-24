@@ -16,7 +16,7 @@ func main() {
 		fmt.Printf("Argument: %s\n", opts.Args[i])
 	}
 	if *help {
-		//opts.Help()
+		opts.Help()
 		os.Exit(0)
 	}
 	if *v {
