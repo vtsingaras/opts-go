@@ -19,7 +19,7 @@
 
 include $(GOROOT)/src/Make.$(GOARCH)
 
-ALL=hello
+ALL=hello large
 
 all: $(ALL)
 
