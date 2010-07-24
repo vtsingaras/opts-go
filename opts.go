@@ -170,3 +170,8 @@ func Parse() {
 	}
 	fmt.Printf("placeholder\n")
 }
+
+// Prints a generated help screen, from the options previously passed
+func Help() {
+	fmt.Printf("Help screen not yet implemented\n")
+}
