@@ -197,14 +197,23 @@ func printOption(w io.Writer,
 		shortform string, 
 		longform string, 
 		description string, 
-		dflt string) {
+		dflt string,
+		value bool) {
+	valappend := ""
+	switch {
+	case value && longform != "--":
+		valappend = "=STRING"
+	case value && longform == "--":
+		valappend = " STRING"
+	}
 	switch {
 	case shortform != "-" && longform != "--":
-		fmt.Fprintf(w," %s,\t%s\t%s",shortform,longform,description)
+		fmt.Fprintf(w," %s,\t%s%s\t%s",shortform,
+			longform,valappend,description)
 	case shortform != "-" && longform == "--":
-		fmt.Fprintf(w," %s\t\t%s",shortform,description)
+		fmt.Fprintf(w," %s%s\t\t%s",shortform,valappend,description)
 	case shortform == "-" && longform != "--":
-		fmt.Fprintf(w," \t%s\t%s",longform,description)
+		fmt.Fprintf(w," \t%s%s\t%s",longform,valappend,description)
 	}
 	// TODO FIXME print the default
 	fmt.Fprintf(w,"\n")
@@ -223,7 +232,7 @@ func Help() {
 				flag.shortflag,
 				flag.longflag,
 				flag.description,
-				"")
+				"",false)
 		}
 		done[flag.shortflag], done[flag.longflag] = true, true
 	}
@@ -233,7 +242,7 @@ func Help() {
 				opt.shortopt,
 				opt.longopt,
 				opt.description,
-				opt.dflt)
+				opt.dflt,true)
 		}
 		done[opt.shortopt], done[opt.longopt] = true, true
 	}
