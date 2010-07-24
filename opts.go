@@ -135,9 +135,11 @@ func handleOption(optnum int) int {
 			switch {
 			case flagok:
 				*flag.destination = true
-			case optok:
+			case optok && i == len(opt)-1:
 				assignValue(o, option.destination, optnum+1)
 				return 1
+			case optok && i != len(opt)-1:
+				needArgument(o)
 			default:
 				invalidOption(o, optnum)
 			}
