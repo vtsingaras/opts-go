@@ -64,6 +64,7 @@ func Longflag(longflag string, desc string) *bool {
 // Creates an option with the specified short and long forms
 func Option(shortopt string, longopt string, desc string, dflt string) *string {
 	dest := new(string)
+	*dest = dflt
 	opt := VarOpt{"-"+shortopt, "--"+longopt, desc, dflt, dest}
 	// insert the items into the map
 	options["-"+shortopt] = opt
@@ -140,6 +141,7 @@ func handleOption(optnum int) int {
 				*flag.destination = true
 			case optok:
 				assignValue(o, option.destination, optnum + 1)
+				return 1
 			default:
 				invalidOption(o,optnum)
 			}
