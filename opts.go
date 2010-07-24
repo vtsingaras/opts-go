@@ -164,7 +164,7 @@ func handleOption(optnum int) int {
 	return 0
 }
 
-// Performs POSIX and GNU option parsing, based on previously set settings
+// Parse performs POSIX and GNU option parsing, based on previously set settings
 func Parse() {
 	Xname = os.Args[0]
 	// for each argument
@@ -183,8 +183,41 @@ func Parse() {
 	}
 }
 
-// Prints a generated help screen, from the options previously passed
+func printOption(shortform string, longform string, description string, dflt string) {
+	switch {
+	case shortform != "-" && longform != "--":
+		fmt.Printf(" %s,\t%s\t%s",shortform,longform,description)
+	case shortform != "-" && longform == "--":
+		fmt.Printf(" %s\t\t%s",shortform,description)
+	case shortform == "-" && longform != "--":
+		fmt.Printf(" \t%s\t%s",longform,description)
+	}
+	// TODO FIXME print the default
+	fmt.Printf("\n")
+}
+
+// Help prints a generated help screen, from the options previously passed
 func Help() {
 	fmt.Printf("%s\n%s\n",usage,description)
+	// a record of which options we've already printed
+	done := map[string]bool{}
+	for str, flag := range flags {
+		if !done[str] {
+			printOption(flag.shortflag,
+				flag.longflag,
+				flag.description,
+				"")
+		}
+		done[flag.shortflag], done[flag.longflag] = true, true
+	}
+	for str, opt := range options {
+		if !done[str] {
+			printOption(opt.shortopt,
+				opt.longopt,
+				opt.description,
+				opt.dflt)
+		}
+		done[opt.shortopt], done[opt.longopt] = true, true
+	}
 	// TODO FIXME create actual help screen
 }
