@@ -10,7 +10,9 @@ package opts
 import (
 	"container/vector"
 	"fmt"
+	"io"
 	"os"
+	"tabwriter"
 )
 
 // Stores an option that takes no arguments ("flag")
@@ -183,17 +185,21 @@ func Parse() {
 	}
 }
 
-func printOption(shortform string, longform string, description string, dflt string) {
+func printOption(w io.Writer,
+		shortform string, 
+		longform string, 
+		description string, 
+		dflt string) {
 	switch {
 	case shortform != "-" && longform != "--":
-		fmt.Printf(" %s,\t%s\t%s",shortform,longform,description)
+		fmt.Fprintf(w," %s,\t%s\t%s",shortform,longform,description)
 	case shortform != "-" && longform == "--":
-		fmt.Printf(" %s\t\t%s",shortform,description)
+		fmt.Fprintf(w," %s\t\t%s",shortform,description)
 	case shortform == "-" && longform != "--":
-		fmt.Printf(" \t%s\t%s",longform,description)
+		fmt.Fprintf(w," \t%s\t%s",longform,description)
 	}
 	// TODO FIXME print the default
-	fmt.Printf("\n")
+	fmt.Fprintf(w,"\n")
 }
 
 // Help prints a generated help screen, from the options previously passed
@@ -201,9 +207,12 @@ func Help() {
 	fmt.Printf("%s\n%s\n",usage,description)
 	// a record of which options we've already printed
 	done := map[string]bool{}
+	// start formatting with the tabwriter
+	w := tabwriter.NewWriter(os.Stdout, 0, 2, 1, ' ', 0)
 	for str, flag := range flags {
 		if !done[str] {
-			printOption(flag.shortflag,
+			printOption(w,
+				flag.shortflag,
 				flag.longflag,
 				flag.description,
 				"")
@@ -212,12 +221,14 @@ func Help() {
 	}
 	for str, opt := range options {
 		if !done[str] {
-			printOption(opt.shortopt,
+			printOption(w,
+				opt.shortopt,
 				opt.longopt,
 				opt.description,
 				opt.dflt)
 		}
 		done[opt.shortopt], done[opt.longopt] = true, true
 	}
-	// TODO FIXME create actual help screen
+	// flush the tabwriter
+	w.Flush()
 }
