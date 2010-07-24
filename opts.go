@@ -1,6 +1,6 @@
 // Copyright 2010 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file. 
+// license that can be found in the LICENSE file.
 
 /*
 	Basic GNU and POSIX option parsing
@@ -45,7 +45,7 @@ var Args vector.StringVector
 // Creates a flag with the specified short and long forms
 func Flag(shortflag string, longflag string, desc string) *bool {
 	dest := new(bool)
-	flag := FlagOpt{"-"+shortflag, "--"+longflag, desc, dest}
+	flag := FlagOpt{"-" + shortflag, "--" + longflag, desc, dest}
 	// insert the items into the map
 	flags["-"+shortflag] = flag
 	flags["--"+longflag] = flag
@@ -66,7 +66,7 @@ func Longflag(longflag string, desc string) *bool {
 func Option(shortopt string, longopt string, desc string, dflt string) *string {
 	dest := new(string)
 	*dest = dflt
-	opt := VarOpt{"-"+shortopt, "--"+longopt, desc, dflt, dest}
+	opt := VarOpt{"-" + shortopt, "--" + longopt, desc, dflt, dest}
 	// insert the items into the map
 	options["-"+shortopt] = opt
 	options["--"+longopt] = opt
@@ -89,12 +89,12 @@ func handleArgument(arg string) {
 }
 
 func invalidOption(opt string, optnum int) {
-	fmt.Printf("Unknown option: %s\n",opt)
+	fmt.Printf("Unknown option: %s\n", opt)
 	os.Exit(1)
 }
 
 func needArgument(opt string) {
-	fmt.Printf("Argument required: %s\n",opt)
+	fmt.Printf("Argument required: %s\n", opt)
 	os.Exit(1)
 }
 
@@ -124,27 +124,27 @@ func handleOption(optnum int) int {
 			*flag.destination = true
 		} else if option, ok := options[opt]; ok {
 			// get the next value
-			assignValue(opt, option.destination, optnum + 1)
+			assignValue(opt, option.destination, optnum+1)
 			return 1
 		} else {
 			// This option doesn't exist
-			invalidOption(opt,optnum)
+			invalidOption(opt, optnum)
 		}
 	} else {
 		// this is a short argument
 		// for each option
 		for i := 1; i < len(opt); i++ {
-			o := "-"+string(opt[i])
+			o := "-" + string(opt[i])
 			flag, flagok := flags[o]
 			option, optok := options[o]
 			switch {
 			case flagok:
 				*flag.destination = true
 			case optok:
-				assignValue(o, option.destination, optnum + 1)
+				assignValue(o, option.destination, optnum+1)
 				return 1
 			default:
-				invalidOption(o,optnum)
+				invalidOption(o, optnum)
 			}
 		}
 	}
