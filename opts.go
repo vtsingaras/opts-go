@@ -39,7 +39,7 @@ var flags map[string]FlagOpt = map[string]FlagOpt{}
 var options map[string]VarOpt = map[string]VarOpt{}
 
 // The name with which this program was called
-var Xname string
+var Xname = os.Args[0]
 
 // A description of the program, which may be multiline
 var description string
@@ -52,7 +52,7 @@ var Args vector.StringVector
 
 // Sets the program usage to the given string, prefixed with 'usage: '
 func Usage(u string) {
-	usage = "usage: "+u
+	usage = fmt.Sprintf("usage: %s %s",Xname,u)
 }
 
 // Sets the program description to an arbitrary string.
@@ -187,7 +187,6 @@ func AddHelp() {
 // Parse performs POSIX and GNU option parsing, based on previously set settings
 func Parse() {
 	AddHelp() // If not already done, add the help option
-	Xname = os.Args[0]
 	// for each argument
 	for i := 1; i < len(os.Args); i++ {
 		// check to see what type of argument
