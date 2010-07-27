@@ -204,6 +204,8 @@ func Parse() {
 	// check if help was asked for
 	if *getHelp {
 		Help()
+		// and exit
+		os.Exit(0)
 	}
 }
 
