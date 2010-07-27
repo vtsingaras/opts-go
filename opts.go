@@ -173,8 +173,20 @@ func handleOption(optnum int) int {
 	return 0
 }
 
+var getHelp *bool
+
+// AddHelp() the -h and --help options, if neither has been added yet. This is 
+// called automatically when Parse() is called.
+func AddHelp() {
+	_, ok := flags["-h"]; _, ok2 := flags["--help"]
+	if !(ok || ok2) {
+		getHelp = Flag("h", "help", "display help screen")
+	}
+}
+
 // Parse performs POSIX and GNU option parsing, based on previously set settings
 func Parse() {
+	AddHelp() // If not already done, add the help option
 	Xname = os.Args[0]
 	// for each argument
 	for i := 1; i < len(os.Args); i++ {
@@ -189,6 +201,10 @@ func Parse() {
 		} else {
 			Args.Push(arg)
 		}
+	}
+	// check if help was asked for
+	if *getHelp {
+		Help()
 	}
 }
 
