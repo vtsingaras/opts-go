@@ -16,7 +16,7 @@ import (
 )
 
 // Stores an option that takes no arguments ("flag")
-type FlagOpt struct {
+type flagOpt struct {
 	shortflag   string
 	longflag    string
 	description string
@@ -24,7 +24,7 @@ type FlagOpt struct {
 }
 
 // Stores an option that takes one argument ("option")
-type VarOpt struct {
+type varOpt struct {
 	shortopt    string
 	longopt     string
 	description string
@@ -33,10 +33,10 @@ type VarOpt struct {
 }
 
 // The registered flags
-var flags map[string]FlagOpt = map[string]FlagOpt{}
+var flags map[string]flagOpt = map[string]flagOpt{}
 
 // The registered options
-var options map[string]VarOpt = map[string]VarOpt{}
+var options map[string]varOpt = map[string]varOpt{}
 
 // The name with which this program was called
 var Xname = os.Args[0]
@@ -63,7 +63,7 @@ func Description(desc string) {
 // Creates a flag with the specified short and long forms
 func Flag(shortflag string, longflag string, desc string) *bool {
 	dest := new(bool)
-	flag := FlagOpt{"-" + shortflag, "--" + longflag, desc, dest}
+	flag := flagOpt{"-" + shortflag, "--" + longflag, desc, dest}
 	// insert the items into the map
 	flags["-"+shortflag] = flag
 	flags["--"+longflag] = flag
@@ -84,7 +84,7 @@ func Longflag(longflag string, desc string) *bool {
 func Option(shortopt string, longopt string, desc string, dflt string) *string {
 	dest := new(string)
 	*dest = dflt
-	opt := VarOpt{"-" + shortopt, "--" + longopt, desc, dflt, dest}
+	opt := varOpt{"-" + shortopt, "--" + longopt, desc, dflt, dest}
 	// insert the items into the map
 	options["-"+shortopt] = opt
 	options["--"+longopt] = opt
