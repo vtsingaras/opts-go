@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The opts package provides basic GNU- and POSIX- style 
+// The opts package provides basic GNU- and POSIX- style
 // option parsing, similarly to getopt.
 package opts
 
@@ -25,11 +25,11 @@ var Args vector.StringVector
 var description string
 
 // A string with the usage of the program
-var usage string = os.Args[0]+" [options]"
+var usage string = os.Args[0] + " [options]"
 
 // Sets the program usage to the given string, prefixed with 'usage: '
 func Usage(u string) {
-	usage = fmt.Sprintf("usage: %s %s",Xname,u)
+	usage = fmt.Sprintf("usage: %s %s", Xname, u)
 }
 
 // Sets the program description to an arbitrary string.
@@ -38,6 +38,7 @@ func Description(desc string) {
 }
 
 type optionType int
+
 const (
 	FLAG = iota
 	OPTION
@@ -46,14 +47,14 @@ const (
 
 // Stores an option that takes one argument ("option")
 type option struct {
-	optType optionType
-	shortform    string
-	longform     string
+	optType     optionType
+	shortform   string
+	longform    string
 	description string
 	dflt        string
-	strdest *string
-	booldest *bool
-	strvecdest *vector.StringVector
+	strdest     *string
+	booldest    *bool
+	strvecdest  *vector.StringVector
 }
 
 // The registered options
@@ -62,13 +63,13 @@ var options map[string]option = map[string]option{}
 // Flag creates a flag with the specified short and long forms.
 func Flag(shortform string, longform string, desc string) *bool {
 	dest := new(bool)
-	flag := option {
-		optType: FLAG,
-		shortform: "-"+shortform,
-		longform: "--"+longform,
+	flag := option{
+		optType:     FLAG,
+		shortform:   "-" + shortform,
+		longform:    "--" + longform,
 		description: desc,
-		dflt: "",
-		booldest: dest,
+		dflt:        "",
+		booldest:    dest,
 	}
 	// insert the items into the map
 	options["-"+shortform] = flag
@@ -80,13 +81,13 @@ func Flag(shortform string, longform string, desc string) *bool {
 func Option(shortform string, longform string, desc string, dflt string) *string {
 	dest := new(string)
 	*dest = dflt
-	opt := option {
-		optType: OPTION,
-		shortform: "-"+shortform,
-		longform: "--"+longform,
+	opt := option{
+		optType:     OPTION,
+		shortform:   "-" + shortform,
+		longform:    "--" + longform,
 		description: desc,
-		dflt: dflt,
-		strdest: dest,
+		dflt:        dflt,
+		strdest:     dest,
 	}
 	// insert the items into the map
 	options["-"+shortform] = opt
@@ -97,13 +98,13 @@ func Option(shortform string, longform string, desc string, dflt string) *string
 // Multi creates an option that can be called multiple times.
 func Multi(shortform string, longform string, desc string) *vector.StringVector {
 	dest := &vector.StringVector{}
-	multi := option {
-		optType: MULTI,
-		shortform: "-"+shortform,
-		longform: "--"+longform,
+	multi := option{
+		optType:     MULTI,
+		shortform:   "-" + shortform,
+		longform:    "--" + longform,
 		description: desc,
-		dflt: "",
-		strvecdest: dest,
+		dflt:        "",
+		strvecdest:  dest,
 	}
 	// insert the items into the map
 	options["-"+shortform] = multi
@@ -176,7 +177,7 @@ func handleOption(optnum int) int {
 	if opt[1] == '-' {
 		// this is a single long argument
 		// get rid of any =
-		_opt := strings.Split(opt,"=",2)
+		_opt := strings.Split(opt, "=", 2)
 		opt = _opt[0]
 		// check the flags list
 		if option, ok := options[opt]; ok {
@@ -233,10 +234,11 @@ func handleOption(optnum int) int {
 
 var getHelp *bool
 
-// addHelp() the -h and --help options, if neither has been added yet. This is 
+// addHelp() the -h and --help options, if neither has been added yet. This is
 // called automatically when Parse() is called.
 func addHelp() {
-	_, ok := options["-h"]; _, ok2 := options["--help"]
+	_, ok := options["-h"]
+	_, ok2 := options["--help"]
 	if !(ok || ok2) {
 		getHelp = Flag("h", "help", "display help screen")
 	} else {
@@ -269,13 +271,7 @@ func Parse() {
 	}
 }
 
-func printOption(w io.Writer,
-		shortform string, 
-		longform string, 
-		description string, 
-		dflt string,
-		value bool,
-		multi bool) {
+func printOption(w io.Writer, shortform string, longform string, description string, dflt string, value bool, multi bool) {
 	valappend := ""
 	switch {
 	case value && longform != "--":
@@ -288,20 +284,20 @@ func printOption(w io.Writer,
 	}
 	switch {
 	case shortform != "-" && longform != "--":
-		fmt.Fprintf(w," %s,\t%s%s\t%s",shortform,
-			longform,valappend,description)
+		fmt.Fprintf(w, " %s,\t%s%s\t%s", shortform,
+			longform, valappend, description)
 	case shortform != "-" && longform == "--":
-		fmt.Fprintf(w," %s%s\t\t%s",shortform,valappend,description)
+		fmt.Fprintf(w, " %s%s\t\t%s", shortform, valappend, description)
 	case shortform == "-" && longform != "--":
-		fmt.Fprintf(w," \t%s%s\t%s",longform,valappend,description)
+		fmt.Fprintf(w, " \t%s%s\t%s", longform, valappend, description)
 	}
 	// TODO FIXME print the default
-	fmt.Fprintf(w,"\n")
+	fmt.Fprintf(w, "\n")
 }
 
 // Help prints a generated help screen, from the options previously passed
 func Help() {
-	fmt.Printf("%s\n%s\n",usage,description)
+	fmt.Printf("%s\n%s\n", usage, description)
 	// a record of which options we've already printed
 	done := map[string]bool{}
 	// start formatting with the tabwriter
@@ -309,10 +305,10 @@ func Help() {
 	for str, opt := range options {
 		if !done[str] {
 			printOption(w,
-				opt.shortform,opt.longform,
+				opt.shortform, opt.longform,
 				opt.description,
-				opt.dflt,opt.optType!=FLAG,
-				opt.optType==MULTI)
+				opt.dflt, opt.optType != FLAG,
+				opt.optType == MULTI)
 		}
 		done[opt.shortform], done[opt.longform] = true, true
 	}
