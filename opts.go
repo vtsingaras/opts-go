@@ -15,40 +15,17 @@ import (
 	"tabwriter"
 )
 
-// Stores an option that takes no arguments ("flag")
-type flag struct {
-	shortform   string
-	longform    string
-	description string
-	destination *bool
-}
-
-// Stores an option that takes one argument ("option")
-type option struct {
-	shortform    string
-	longform     string
-	description string
-	dflt        string
-	destination *string
-}
-
-// The registered flags
-var flags map[string]flag = map[string]flag{}
-
-// The registered options
-var options map[string]option = map[string]option{}
-
 // The name with which this program was called
 var Xname = os.Args[0]
+
+// The list of optionless arguments provided
+var Args vector.StringVector
 
 // A description of the program, which may be multiline
 var description string
 
 // A string with the usage of the program
 var usage string = os.Args[0]+" [options]"
-
-// The list of optionless arguments provided
-var Args vector.StringVector
 
 // Sets the program usage to the given string, prefixed with 'usage: '
 func Usage(u string) {
@@ -60,45 +37,103 @@ func Description(desc string) {
 	description = desc
 }
 
-// Flag() creates a flag with the specified short and long forms.
+type optionType int
+const (
+	FLAG = iota
+	OPTION
+	MULTI
+)
+
+// Stores an option that takes one argument ("option")
+type option struct {
+	optType optionType
+	shortform    string
+	longform     string
+	description string
+	dflt        string
+	strdest *string
+	booldest *bool
+	strvecdest *vector.StringVector
+}
+
+// The registered options
+var options map[string]option = map[string]option{}
+
+// Flag creates a flag with the specified short and long forms.
 func Flag(shortform string, longform string, desc string) *bool {
 	dest := new(bool)
-	flag := flag{"-" + shortform, "--" + longform, desc, dest}
+	flag := option {
+		optType: FLAG,
+		shortform: "-"+shortform,
+		longform: "--"+longform,
+		description: desc,
+		dflt: "",
+		booldest: dest,
+	}
 	// insert the items into the map
-	flags["-"+shortform] = flag
-	flags["--"+longform] = flag
+	options["-"+shortform] = flag
+	options["--"+longform] = flag
 	return dest
 }
 
-// Shortflag() creates a flag with no long form, only a short one.
-func Shortflag(shortform string, desc string) *bool {
-	return Flag(shortform, "", desc)
-}
-
-// Longflag() ceates a flag with no short form, only a long one
-func Longflag(longform string, desc string) *bool {
-	return Flag("", longform, desc)
-}
-
-// Option() creates an option with the specified short and long forms.
+// Option creates an option with the specified short and long forms.
 func Option(shortform string, longform string, desc string, dflt string) *string {
 	dest := new(string)
 	*dest = dflt
-	opt := option{"-" + shortform, "--" + longform, desc, dflt, dest}
+	opt := option {
+		optType: OPTION,
+		shortform: "-"+shortform,
+		longform: "--"+longform,
+		description: desc,
+		dflt: dflt,
+		strdest: dest,
+	}
 	// insert the items into the map
 	options["-"+shortform] = opt
 	options["--"+longform] = opt
 	return dest
 }
 
-// Shortopt() creates an option with no long form.
+// Multi creates an option that can be called multiple times.
+func Multi(shortform string, longform string, desc string) *vector.StringVector {
+	dest := &vector.StringVector{}
+	multi := option {
+		optType: MULTI,
+		shortform: "-"+shortform,
+		longform: "--"+longform,
+		description: desc,
+		dflt: "",
+		strvecdest: dest,
+	}
+	// insert the items into the map
+	options["-"+shortform] = multi
+	options["--"+longform] = multi
+	return dest
+}
+
+// Shortflag creates a flag with no long form, only a short one.
+func Shortflag(shortform string, desc string) *bool {
+	return Flag(shortform, "", desc)
+}
+// Longflag ceates a flag with no short form, only a long one
+func Longflag(longform string, desc string) *bool {
+	return Flag("", longform, desc)
+}
+// Shortopt creates an option with no long form.
 func Shortopt(opt string, desc string, dflt string) *string {
 	return Option(opt, "", desc, dflt)
 }
-
-// Longopt() creates an option with no short form.
+// Longopt creates an option with no short form.
 func Longopt(opt string, desc string, dflt string) *string {
 	return Option("", opt, desc, dflt)
+}
+// Shortmulti creates an option with no long form.
+func Shortmulti(opt string, desc string) *vector.StringVector {
+	return Multi(opt, "", desc)
+}
+// Longmulti creates an option with no short form.
+func Longmulti(opt string, desc string) *vector.StringVector {
+	return Multi("", opt, desc)
 }
 
 func invalidOption(opt string, optnum int) {
@@ -128,6 +163,14 @@ func assignValue(opt string, dest *string, place int) {
 	*dest = os.Args[place]
 }
 
+func pushValue(opt string, dest *vector.StringVector, place int) {
+	if place >= len(os.Args) || isOption(os.Args[place]) {
+		needArgument(opt)
+		os.Exit(1)
+	}
+	(*dest).Push(os.Args[place])
+}
+
 func handleOption(optnum int) int {
 	opt := os.Args[optnum]
 	if opt[1] == '-' {
@@ -136,14 +179,24 @@ func handleOption(optnum int) int {
 		_opt := strings.Split(opt,"=",2)
 		opt = _opt[0]
 		// check the flags list
-		if flag, ok := flags[opt]; ok {
-			*flag.destination = true
-		} else if option, ok := options[opt]; ok {
-			// get the next value
-			if len(_opt) > 1 {
-				*option.destination = _opt[1]
-			} else {
-				needArgument(opt)
+		if option, ok := options[opt]; ok {
+			switch {
+			case option.optType == FLAG:
+				*option.booldest = true
+			case option.optType == OPTION:
+				// get the next value
+				if len(_opt) > 1 {
+					*option.strdest = _opt[1]
+				} else {
+					needArgument(opt)
+				}
+			case option.optType == MULTI:
+				// get the next value
+				if len(_opt) > 1 {
+					option.strvecdest.Push(_opt[1])
+				} else {
+					needArgument(opt)
+				}
 			}
 			return 0
 		} else {
@@ -155,16 +208,21 @@ func handleOption(optnum int) int {
 		// for each option
 		for i := 1; i < len(opt); i++ {
 			o := "-" + string(opt[i])
-			flag, flagok := flags[o]
-			option, optok := options[o]
+			option := options[o]
 			switch {
-			case flagok:
-				*flag.destination = true
-			case optok && i == len(opt)-1:
-				assignValue(o, option.destination, optnum+1)
+			case option.optType == FLAG:
+				*option.booldest = true
+			case option.optType == OPTION && i == len(opt)-1:
+				assignValue(o, option.strdest, optnum+1)
 				return 1
-			case optok && i != len(opt)-1:
+			case option.optType == OPTION && i != len(opt)-1:
 				needArgument(o)
+			case option.optType == MULTI && i == len(opt)-1:
+				pushValue(o, option.strvecdest, optnum+1)
+				return 1
+			case option.optType == MULTI && i != len(opt)-1:
+				needArgument(o)
+				
 			default:
 				invalidOption(o, optnum)
 			}
@@ -175,18 +233,20 @@ func handleOption(optnum int) int {
 
 var getHelp *bool
 
-// AddHelp() the -h and --help options, if neither has been added yet. This is 
+// addHelp() the -h and --help options, if neither has been added yet. This is 
 // called automatically when Parse() is called.
-func AddHelp() {
-	_, ok := flags["-h"]; _, ok2 := flags["--help"]
+func addHelp() {
+	_, ok := options["-h"]; _, ok2 := options["--help"]
 	if !(ok || ok2) {
 		getHelp = Flag("h", "help", "display help screen")
+	} else {
+		getHelp = new(bool)
 	}
 }
 
 // Parse performs POSIX and GNU option parsing, based on previously set settings
 func Parse() {
-	AddHelp() // If not already done, add the help option
+	addHelp() // If not already done, add the help option
 	// for each argument
 	for i := 1; i < len(os.Args); i++ {
 		// check to see what type of argument
@@ -242,23 +302,13 @@ func Help() {
 	done := map[string]bool{}
 	// start formatting with the tabwriter
 	w := tabwriter.NewWriter(os.Stdout, 0, 2, 1, ' ', 0)
-	for str, flag := range flags {
-		if !done[str] {
-			printOption(w,
-				flag.shortform,
-				flag.longform,
-				flag.description,
-				"",false)
-		}
-		done[flag.shortform], done[flag.longform] = true, true
-	}
 	for str, opt := range options {
 		if !done[str] {
 			printOption(w,
 				opt.shortform,
 				opt.longform,
 				opt.description,
-				opt.dflt,true)
+				opt.dflt,opt.optType!=FLAG)
 		}
 		done[opt.shortform], done[opt.longform] = true, true
 	}

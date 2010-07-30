@@ -3,3 +3,4 @@ syntax:glob
 *.a
 examples/hello
 examples/large
+examples/multi
