@@ -60,7 +60,7 @@ func Description(desc string) {
 	description = desc
 }
 
-// Creates a flag with the specified short and long forms
+// Flag() creates a flag with the specified short and long forms.
 func Flag(shortform string, longform string, desc string) *bool {
 	dest := new(bool)
 	flag := flag{"-" + shortform, "--" + longform, desc, dest}
@@ -70,17 +70,17 @@ func Flag(shortform string, longform string, desc string) *bool {
 	return dest
 }
 
-// Creates a flag with no long form, only a short one
+// Shortflag() creates a flag with no long form, only a short one.
 func Shortflag(shortform string, desc string) *bool {
 	return Flag(shortform, "", desc)
 }
 
-// Creates a flag with no short form, only a long one
+// Longflag() ceates a flag with no short form, only a long one
 func Longflag(longform string, desc string) *bool {
 	return Flag("", longform, desc)
 }
 
-// Creates an option with the specified short and long forms
+// Option() creates an option with the specified short and long forms.
 func Option(shortform string, longform string, desc string, dflt string) *string {
 	dest := new(string)
 	*dest = dflt
@@ -91,12 +91,12 @@ func Option(shortform string, longform string, desc string, dflt string) *string
 	return dest
 }
 
-// Creates an option with no long form
+// Shortopt() creates an option with no long form.
 func Shortopt(opt string, desc string, dflt string) *string {
 	return Option(opt, "", desc, dflt)
 }
 
-// Creates an option with no short form
+// Longopt() creates an option with no short form.
 func Longopt(opt string, desc string, dflt string) *string {
 	return Option("", opt, desc, dflt)
 }
