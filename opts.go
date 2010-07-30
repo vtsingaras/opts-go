@@ -16,27 +16,27 @@ import (
 )
 
 // Stores an option that takes no arguments ("flag")
-type flagOpt struct {
-	shortflag   string
-	longflag    string
+type flag struct {
+	shortform   string
+	longform    string
 	description string
 	destination *bool
 }
 
 // Stores an option that takes one argument ("option")
-type varOpt struct {
-	shortopt    string
-	longopt     string
+type option struct {
+	shortform    string
+	longform     string
 	description string
 	dflt        string
 	destination *string
 }
 
 // The registered flags
-var flags map[string]flagOpt = map[string]flagOpt{}
+var flags map[string]flag = map[string]flag{}
 
 // The registered options
-var options map[string]varOpt = map[string]varOpt{}
+var options map[string]option = map[string]option{}
 
 // The name with which this program was called
 var Xname = os.Args[0]
@@ -61,33 +61,33 @@ func Description(desc string) {
 }
 
 // Creates a flag with the specified short and long forms
-func Flag(shortflag string, longflag string, desc string) *bool {
+func Flag(shortform string, longform string, desc string) *bool {
 	dest := new(bool)
-	flag := flagOpt{"-" + shortflag, "--" + longflag, desc, dest}
+	flag := flag{"-" + shortform, "--" + longform, desc, dest}
 	// insert the items into the map
-	flags["-"+shortflag] = flag
-	flags["--"+longflag] = flag
+	flags["-"+shortform] = flag
+	flags["--"+longform] = flag
 	return dest
 }
 
 // Creates a flag with no long form, only a short one
-func Shortflag(shortflag string, desc string) *bool {
-	return Flag(shortflag, "", desc)
+func Shortflag(shortform string, desc string) *bool {
+	return Flag(shortform, "", desc)
 }
 
 // Creates a flag with no short form, only a long one
-func Longflag(longflag string, desc string) *bool {
-	return Flag("", longflag, desc)
+func Longflag(longform string, desc string) *bool {
+	return Flag("", longform, desc)
 }
 
 // Creates an option with the specified short and long forms
-func Option(shortopt string, longopt string, desc string, dflt string) *string {
+func Option(shortform string, longform string, desc string, dflt string) *string {
 	dest := new(string)
 	*dest = dflt
-	opt := varOpt{"-" + shortopt, "--" + longopt, desc, dflt, dest}
+	opt := option{"-" + shortform, "--" + longform, desc, dflt, dest}
 	// insert the items into the map
-	options["-"+shortopt] = opt
-	options["--"+longopt] = opt
+	options["-"+shortform] = opt
+	options["--"+longform] = opt
 	return dest
 }
 
@@ -245,22 +245,22 @@ func Help() {
 	for str, flag := range flags {
 		if !done[str] {
 			printOption(w,
-				flag.shortflag,
-				flag.longflag,
+				flag.shortform,
+				flag.longform,
 				flag.description,
 				"",false)
 		}
-		done[flag.shortflag], done[flag.longflag] = true, true
+		done[flag.shortform], done[flag.longform] = true, true
 	}
 	for str, opt := range options {
 		if !done[str] {
 			printOption(w,
-				opt.shortopt,
-				opt.longopt,
+				opt.shortform,
+				opt.longform,
 				opt.description,
 				opt.dflt,true)
 		}
-		done[opt.shortopt], done[opt.longopt] = true, true
+		done[opt.shortform], done[opt.longform] = true, true
 	}
 	// flush the tabwriter
 	w.Flush()
