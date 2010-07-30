@@ -274,13 +274,17 @@ func printOption(w io.Writer,
 		longform string, 
 		description string, 
 		dflt string,
-		value bool) {
+		value bool,
+		multi bool) {
 	valappend := ""
 	switch {
 	case value && longform != "--":
 		valappend = "=STRING"
 	case value && longform == "--":
 		valappend = " STRING"
+	}
+	if multi {
+		valappend += " ..."
 	}
 	switch {
 	case shortform != "-" && longform != "--":
@@ -305,10 +309,10 @@ func Help() {
 	for str, opt := range options {
 		if !done[str] {
 			printOption(w,
-				opt.shortform,
-				opt.longform,
+				opt.shortform,opt.longform,
 				opt.description,
-				opt.dflt,opt.optType!=FLAG)
+				opt.dflt,opt.optType!=FLAG,
+				opt.optType==MULTI)
 		}
 		done[opt.shortform], done[opt.longform] = true, true
 	}
