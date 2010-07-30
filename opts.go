@@ -208,7 +208,10 @@ func handleOption(optnum int) int {
 		// for each option
 		for i := 1; i < len(opt); i++ {
 			o := "-" + string(opt[i])
-			option := options[o]
+			option, ok := options[o]
+			if !ok {
+				invalidOption(o, optnum)
+			}
 			switch {
 			case option.optType == FLAG:
 				*option.booldest = true
@@ -222,9 +225,6 @@ func handleOption(optnum int) int {
 				return 1
 			case option.optType == MULTI && i != len(opt)-1:
 				needArgument(o)
-				
-			default:
-				invalidOption(o, optnum)
 			}
 		}
 	}
