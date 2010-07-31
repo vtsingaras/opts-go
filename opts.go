@@ -275,9 +275,9 @@ func printOption(w io.Writer, shortform string, longform string, description str
 	valappend := ""
 	switch {
 	case value && longform != "--":
-		valappend = "=STRING"
+		valappend = fmt.Sprintf(" %s", dflt)
 	case value && longform == "--":
-		valappend = " STRING"
+		valappend = fmt.Sprintf("=%s", dflt)
 	}
 	if multi {
 		valappend += " ..."
@@ -291,7 +291,6 @@ func printOption(w io.Writer, shortform string, longform string, description str
 	case shortform == "-" && longform != "--":
 		fmt.Fprintf(w, " \t%s%s\t%s", longform, valappend, description)
 	}
-	// TODO FIXME print the default
 	fmt.Fprintf(w, "\n")
 }
 
