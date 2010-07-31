@@ -275,9 +275,9 @@ func printOption(w io.Writer, shortform string, longform string, description str
 	valappend := ""
 	switch {
 	case value && longform != "--":
-		valappend = fmt.Sprintf(" %s", dflt)
-	case value && longform == "--":
 		valappend = fmt.Sprintf("=%s", dflt)
+	case value && longform == "--":
+		valappend = fmt.Sprintf(" %s", dflt)
 	}
 	if multi {
 		valappend += " ..."
