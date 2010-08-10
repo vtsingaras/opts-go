@@ -25,7 +25,7 @@ var Args vector.StringVector
 var description string
 
 // A string with the usage of the program
-var usage string = os.Args[0] + " [options]"
+var usage string = "usage: " + os.Args[0] + " [options]"
 
 // Sets the program usage to the given string, prefixed with 'usage: '
 func Usage(u string) {
