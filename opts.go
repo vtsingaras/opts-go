@@ -96,14 +96,14 @@ func Option(shortform string, longform string, desc string, dflt string) *string
 }
 
 // Multi creates an option that can be called multiple times.
-func Multi(shortform string, longform string, desc string) *vector.StringVector {
+func Multi(shortform string, longform string, desc string, name string) *vector.StringVector {
 	dest := &vector.StringVector{}
 	multi := option{
 		optType:     MULTI,
 		shortform:   "-" + shortform,
 		longform:    "--" + longform,
 		description: desc,
-		dflt:        "",
+		dflt:        name,
 		strvecdest:  dest,
 	}
 	// insert the items into the map
@@ -128,13 +128,13 @@ func Shortopt(opt string, desc string, dflt string) *string {
 func Longopt(opt string, desc string, dflt string) *string {
 	return Option("", opt, desc, dflt)
 }
-// Shortmulti creates an option with no long form.
-func Shortmulti(opt string, desc string) *vector.StringVector {
-	return Multi(opt, "", desc)
+// Shortmulti creates a multi with no long form.
+func Shortmulti(opt string, desc string, name string) *vector.StringVector {
+	return Multi(opt, "", desc, name)
 }
-// Longmulti creates an option with no short form.
-func Longmulti(opt string, desc string) *vector.StringVector {
-	return Multi("", opt, desc)
+// Longmulti creates a multi with no short form.
+func Longmulti(opt string, desc string, name string) *vector.StringVector {
+	return Multi("", opt, desc, name)
 }
 
 func invalidOption(opt string, optnum int) {
@@ -280,7 +280,7 @@ func printOption(w io.Writer, shortform string, longform string, description str
 		valappend = fmt.Sprintf(" %s", dflt)
 	}
 	if multi {
-		valappend += " ..."
+		valappend += "..."
 	}
 	switch {
 	case shortform != "-" && longform != "--":
