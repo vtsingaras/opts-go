@@ -10,6 +10,7 @@ package opts
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 //
@@ -86,6 +87,10 @@ type Option interface {
 	// takes, or an empty string if this option takes none.
 	ArgName() string
 	// Invoke is called when this option appears in the command line.
+	// If the option expects an argument (as indicated by ArgName), 
+	// Invoke is guaranteed not to be called without one. Similarly, if 
+	// the option does not expect an argument, Invoke is guaranteed to be
+	// called only with the first parameter being the empty string.
 	Invoke(string, Parsing)
 }
 
@@ -161,6 +166,7 @@ func Add(opt Option) {
 	}
 }
 
+// True if the option list has been terminated by '-', false otherwise.
 var optsOver bool
 
 // Parse performs parsing of the command line, making complete information 
@@ -176,6 +182,7 @@ func Parse() {
 // entry point for most programs is Parse.
 func ParseArgs(args []string) {
 	addHelp()
+	p := Parsing{}
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		if len(arg)>0 && arg[0]=='-' && !optsOver {
@@ -183,9 +190,28 @@ func ParseArgs(args []string) {
 			case len(arg)==1:
 				optsOver=true
 			case arg[1]=='-':
-				
+				argparts := strings.Split(arg, "=", 2)
+				arg, val := argparts[0], argparts[1]
+				if option, ok := options[arg]; ok {
+					switch {
+					case val=="" && option.ArgName()=="":
+					}
+				} else {
+					p.Error(UNKNOWN, arg)
+				}
 			default:
-				
+				for _, optChar := range arg[1:len(arg)] {
+					opt := string(optChar)
+					if option, ok := options["-"+opt]; ok {
+						if option.ArgName()=="" {
+							
+						} else {
+							
+						}
+					} else {
+						p.Error(UNKNOWN, "-"+opt)
+					}
+				}
 			}
 		} else {
 			Args = Args[0:len(Args)+1]
