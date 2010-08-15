@@ -22,28 +22,29 @@ var Xname = os.Args[0]
 var Args vector.StringVector
 
 // A description of the program, which may be multiline
-var description string
+var Description string
 
-// A string with the usage of the program
-var usage string = "usage: " + os.Args[0] + " [options]"
-
-// Sets the program usage to the given string, prefixed with 'usage: '
-func Usage(u string) {
-	usage = fmt.Sprintf("usage: %s %s", Xname, u)
-}
-
-// Sets the program description to an arbitrary string.
-func Description(desc string) {
-	description = desc
-}
+// A string with the usage of the program. usage: and the name of the program
+// are automatically prefixed.
+var Usage string = "[options]"
 
 type optionType int
 
+// The types of options
 const (
 	FLAG = iota
 	OPTION
 	MULTI
+	HALF
 )
+
+type optionLength int
+
+const (
+	SHORT = iota
+	LONG
+)
+
 
 // Stores an option that takes one argument ("option")
 type option struct {
@@ -296,7 +297,7 @@ func printOption(w io.Writer, shortform string, longform string, description str
 
 // Help prints a generated help screen, from the options previously passed
 func Help() {
-	fmt.Printf("%s\n%s\n", usage, description)
+	fmt.Printf("usage: %s %s\n%s\n", Xname, Usage, Description)
 	// a record of which options we've already printed
 	done := map[string]bool{}
 	// start formatting with the tabwriter
