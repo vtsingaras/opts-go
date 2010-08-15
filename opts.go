@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The opts package provides basic GNU- and POSIX- style
-// option parsing, similarly to getopt.
+// The opts package provides advanced GNU- and POSIX- style
+// option parsing.
 package opts
 
 import (
