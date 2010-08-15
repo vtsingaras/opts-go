@@ -84,7 +84,7 @@ type Option interface {
 	// Description returns the description of this option.
 	Description() string
 	// ArgName returns a descriptive name for the argument this option
-	// takes, or nil if this option takes none.
+	// takes, or an empty string if this option takes none.
 	ArgName() string
 	// Invoke is called when this option appears in the command line.
 	Invoke(string, Parsing)
@@ -111,14 +111,14 @@ func (o genopt) Forms() []string {
 	return forms
 }
 
-func (o genopt) Description() string {
-	return o.description
-}
+func (o genopt) Description() string { return o.description }
 
 type flag struct {
 	genopt
 	dest *bool
 }
+
+func (flag) ArgName() string { return "" }
 
 type half struct {
 	genopt
@@ -127,16 +127,23 @@ type half struct {
 	givendflt string // the default value if the option is given
 }
 
+func (o half) ArgName() string { return o.givendflt }
+
 type single struct {
 	genopt
 	dest *string
 	dflt string
 }
 
+func (o single) ArgName() string { return o.dflt }
+
 type multi struct {
 	genopt
+	valuedesc string
 	dest *[]string
 }
+
+func (o multi) ArgName() string { return o.valuedesc }
 
 // Stores an option of any kind
 type option struct {
