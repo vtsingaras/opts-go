@@ -7,8 +7,8 @@ include ${GOROOT}/src/Make.$(GOARCH)
 TARG = opts
 GOFMT = gofmt -w
 
-GOFILES = opts.go
+GOFILES = opts.go help.go
 include $(GOROOT)/src/Make.pkg
 
 format:
-	${GOFMT} opts.go
+	${GOFMT} ${GOFILES}

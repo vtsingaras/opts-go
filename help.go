@@ -4,6 +4,11 @@
 
 package opts
 
+// addHelp adds the -h and --help options, if they do not already exist.
+func addHelp() {
+	
+}
+
 // Help prints automatically generated help information to standard output,
 // and exits the program.
 func Help() {

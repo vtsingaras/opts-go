@@ -164,5 +164,5 @@ func Add(opt Option) {
 // Parse performs parsing of the command line, making complete information 
 // available to the program.
 func Parse() {
-	
+	addHelp()
 }
