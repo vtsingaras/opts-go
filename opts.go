@@ -20,7 +20,7 @@ import (
 var Xname = os.Args[0]
 
 // The list of optionless arguments provided
-var Args []string
+var Args []string = make([]string, 0, len(os.Args))
 
 // A description of the program, which may be multiline
 var Description string
@@ -74,10 +74,10 @@ func (Parsing) Error(err int, opt string) {
 // Option represents a conceptual option, which there may be multiple methods
 // of invoking.
 type Option interface {
-	// Forms returns a slice with all forms of this option. Forms that do 
-	// not begin with a dash are interpreted as short options, multiple of
-	// which may be combined in one argument (-abcdef). Forms that begin
-	// with a dash are interpreted as long options, which must remain
+	// Forms returns a slice with all forms of this option. Forms that 
+	// begin with a single dash are interpreted as short options, multiple
+	// of which may be combined in one argument (-abcdef). Forms that begin
+	// with two dashes are interpreted as long options, which must remain
 	// whole.
 	Forms() []string
 	// Description returns the description of this option.
@@ -161,8 +161,35 @@ func Add(opt Option) {
 	}
 }
 
+var optsOver bool
+
 // Parse performs parsing of the command line, making complete information 
 // available to the program.
 func Parse() {
+	ParseArgs(os.Args)
+}
+
+// ParseArgs performs parsing of the given command line, making complete
+// information available to the program.
+//
+// This function was created specifically to enable unit testing - the proper
+// entry point for most programs is Parse.
+func ParseArgs(args []string) {
 	addHelp()
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if len(arg)>0 && arg[0]=='-' && !optsOver {
+			switch {
+			case len(arg)==1:
+				optsOver=true
+			case arg[1]=='-':
+				
+			default:
+				
+			}
+		} else {
+			Args = Args[0:len(Args)+1]
+			Args[len(Args)-1] = arg
+		}
+	}
 }
