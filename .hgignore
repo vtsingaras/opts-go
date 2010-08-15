@@ -1,3 +1,4 @@
 syntax:glob
 *.6
 *.a
+*.out
