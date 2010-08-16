@@ -186,7 +186,14 @@ func Add(opt Option) {
 // Flag creates a new Flag-type option, and adds it, returning the destination.
 func Flag(sform string, lform string, desc string) *bool {
 	dest := new(bool)
-	o := flag{}
+	o := flag {
+		genopt: genopt {
+			shortform: sform,
+			longform: lform,
+			description: desc,
+		},
+		dest: dest,
+	}
 	Add(o)
 	return dest
 }
