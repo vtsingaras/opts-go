@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"container/vector"
 )
 
 //
@@ -57,15 +58,15 @@ func (Parsing) Error(err int, opt string) {
 	switch err {
 		case UNKNOWN:
 			fmt.Fprintf(os.Stderr, 
-				"%s: %s: unknown option",
+				"%s: %s: unknown option\n",
 				Xname, opt)
 		case REQARG:
 			fmt.Fprintf(os.Stderr,
-				"%s: %s: required argument",
+				"%s: %s: required argument\n",
 				Xname, opt)
 		case NOARG:
 			fmt.Fprintf(os.Stderr,
-				"%s: %s takes no argument",
+				"%s: %s takes no argument\n",
 				Xname, opt)
 			
 	}
@@ -123,6 +124,9 @@ type flag struct {
 }
 
 func (flag) ArgName() string { return "" }
+func (o flag) Invoke(string, Parsing) {
+	*o.dest = true
+}
 
 type half struct {
 	genopt
@@ -132,6 +136,13 @@ type half struct {
 }
 
 func (o half) ArgName() string { return o.givendflt }
+func (o half) Invoke(arg string, _ Parsing) {
+	if arg == "" {
+		*o.dest = o.givendflt
+	} else {
+		*o.dest = arg
+	}
+}
 
 type single struct {
 	genopt
@@ -140,14 +151,20 @@ type single struct {
 }
 
 func (o single) ArgName() string { return o.dflt }
+func (o single) Invoke(arg string, _ Parsing) {
+	*o.dest = arg
+}
 
 type multi struct {
 	genopt
 	valuedesc string
-	dest *[]string
+	dest *vector.StringVector
 }
 
 func (o multi) ArgName() string { return o.valuedesc }
+func (o multi) Invoke(arg string, _ Parsing) {
+	(*o.dest).Push(arg)
+}
 
 // Stores an option of any kind
 type option struct {
@@ -164,6 +181,38 @@ func Add(opt Option) {
 	for _, form := range opt.Forms() {
 		options[form]=opt
 	}
+}
+
+// Flag creates a new Flag-type option, and adds it, returning the destination.
+func Flag(sform string, lform string, desc string) *bool {
+	dest := new(bool)
+	o := flag{}
+	Add(o)
+	return dest
+}
+
+// Half creates a new Half-type option, and adds it, returning the destination.
+func Half(sform string, lform string, desc string) *bool {
+	dest := new(bool)
+	o := half{}
+	Add(o)
+	return dest
+}
+
+// Single creates a new Single-type option, and adds it, returning the destination.
+func Single(sform string, lform string, desc string) *bool {
+	dest := new(bool)
+	o := single{}
+	Add(o)
+	return dest
+}
+
+// Multi creates a new Multi-type option, and adds it, returning the destination.
+func Multi(sform string, lform string, desc string) *bool {
+	dest := new(bool)
+	o := multi{}
+	Add(o)
+	return dest
 }
 
 // True if the option list has been terminated by '-', false otherwise.
@@ -191,10 +240,20 @@ func ParseArgs(args []string) {
 				optsOver=true
 			case arg[1]=='-':
 				argparts := strings.Split(arg, "=", 2)
-				arg, val := argparts[0], argparts[1]
+				var  val string
+				if len(argparts) == 2 {
+					arg, val = argparts[0], argparts[1]
+				}
 				if option, ok := options[arg]; ok {
 					switch {
 					case val=="" && option.ArgName()=="":
+						option.Invoke(val,p)
+					case val!="" && option.ArgName()!="":
+						option.Invoke(val,p)
+					case val=="" && option.ArgName()!="":
+						p.Error(REQARG, arg)
+					case val!="" && option.ArgName()=="":
+						p.Error(NOARG, arg)
 					}
 				} else {
 					p.Error(UNKNOWN, arg)
