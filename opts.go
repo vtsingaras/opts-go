@@ -157,12 +157,12 @@ type option struct {
 }
 
 // The registered options
-var options map[string]*Option = map[string]*Option{}
+var options map[string]Option = map[string]Option{}
 
 // Add adds the given option.
 func Add(opt Option) {
 	for _, form := range opt.Forms() {
-		options[form]=&opt
+		options[form]=opt
 	}
 }
 
