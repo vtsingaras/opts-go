@@ -2,315 +2,351 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The opts package provides basic GNU- and POSIX- style
-// option parsing, similarly to getopt.
+/*
+The opts package provides advanced GNU- and POSIX- style option parsing.
+*/
 package opts
 
 import (
-	"container/vector"
 	"fmt"
-	"io"
 	"os"
 	"strings"
-	"tabwriter"
+	"container/vector"
 )
+
+//
+// Exported variables
+//
 
 // The name with which this program was called
 var Xname = os.Args[0]
 
 // The list of optionless arguments provided
-var Args vector.StringVector
+var Args []string = make([]string, 0, len(os.Args))
 
 // A description of the program, which may be multiline
-var description string
+var Description string
 
-// A string with the usage of the program
-var usage string = "usage: " + os.Args[0] + " [options]"
+// A string with the usage of the program. usage: and the name of the program
+// are automatically prefixed.
+var Usage string = "[options]"
 
-// Sets the program usage to the given string, prefixed with 'usage: '
-func Usage(u string) {
-	usage = fmt.Sprintf("usage: %s %s", Xname, u)
-}
+//
+// Description of options
+//
 
-// Sets the program description to an arbitrary string.
-func Description(desc string) {
-	description = desc
-}
-
-type optionType int
-
+// The built-in types of options.
 const (
 	FLAG = iota
-	OPTION
+	HALF
+	SINGLE
 	MULTI
 )
 
-// Stores an option that takes one argument ("option")
-type option struct {
-	optType     optionType
+// The built-in types of errors.
+const (
+	UNKNOWNERR = iota // unknown option
+	REQARGERR         // a required argument was not present
+	NOARGERR          // an argument was present where none should have been
+)
+
+// Whether or not arguments are required
+const (
+	NOARG = iota
+	OPTARG
+	REQARG
+)
+
+// Parsing is a callback used by Option implementations to report errors.
+type Parsing struct{}
+
+// Error prints the relevant error message and exits.
+func (Parsing) Error(err int, opt string) {
+	switch err {
+	case UNKNOWNERR:
+		fmt.Fprintf(os.Stderr,
+			"%s: %s: unknown option\n",
+			Xname, opt)
+	case REQARGERR:
+		fmt.Fprintf(os.Stderr,
+			"%s: %s: argument required\n",
+			Xname, opt)
+	case NOARGERR:
+		fmt.Fprintf(os.Stderr,
+			"%s: %s takes no argument\n",
+			Xname, opt)
+
+	}
+	os.Exit(1)
+}
+
+// Option represents a conceptual option, which there may be multiple methods
+// of invoking.
+type Option interface {
+	// Forms returns a slice with all forms of this option. Forms that
+	// begin with a single dash are interpreted as short options, multiple
+	// of which may be combined in one argument (-abcdef). Forms that begin
+	// with two dashes are interpreted as long options, which must remain
+	// whole.
+	Forms() []string
+	// Description returns the description of this option.
+	Description() string
+	// ArgName returns a descriptive name for the argument this option
+	// takes, or an empty string if this option takes none.
+	ArgName() string
+	// Required NOARG, OPTARG, or REQARG
+	Arg() int
+	// Invoke is called when this option appears in the command line.
+	// If the option expects an argument (as indicated by ArgName),
+	// Invoke is guaranteed not to be called without one. Similarly, if
+	// the option does not expect an argument, Invoke is guaranteed to be
+	// called only with the first parameter being the empty string.
+	Invoke(string, Parsing)
+}
+
+// A partial implementation of the Option interface that reflects what most
+// options share.
+type genopt struct {
 	shortform   string
 	longform    string
 	description string
-	dflt        string
-	strdest     *string
-	booldest    *bool
-	strvecdest  *vector.StringVector
+}
+
+func (o genopt) Forms() []string {
+	forms := make([]string, 0, 2)
+	if len(o.shortform) > 0 {
+		forms = forms[0:1]
+		forms[0] = o.shortform
+	}
+	if len(o.longform) > 0 {
+		forms = forms[0 : len(forms)+1]
+		forms[len(forms)-1] = o.longform
+	}
+	return forms
+}
+
+func (o genopt) Description() string { return o.description }
+
+
+type flag struct {
+	genopt
+	dest *bool
+}
+
+func (flag) ArgName() string { return "" }
+func (o flag) Arg() int { return NOARG }
+func (o flag) Invoke(string, Parsing) {
+	*o.dest = true
+}
+
+type half struct {
+	genopt
+	dest      *string
+	dflt      string // the value if the option is not given
+	givendflt string // the default value if the option is given
+}
+
+func (o half) ArgName() string { return o.givendflt }
+func (o half) Arg() int { return OPTARG }
+func (o half) Invoke(arg string, _ Parsing) {
+	if arg == "" {
+		*o.dest = o.givendflt
+	} else {
+		*o.dest = arg
+	}
+}
+
+type single struct {
+	genopt
+	dest *string
+	dflt string
+}
+
+func (o single) ArgName() string { return o.dflt }
+func (o single) Arg() int { return REQARG }
+func (o single) Invoke(arg string, _ Parsing) {
+	*o.dest = arg
+}
+
+type multi struct {
+	genopt
+	valuedesc string
+	dest      *vector.StringVector
+}
+
+func (o multi) ArgName() string { return o.valuedesc }
+func (o multi) Arg() int { return REQARG }
+func (o multi) Invoke(arg string, _ Parsing) {
+	(*o.dest).Push(arg)
+}
+
+// Stores an option of any kind
+type option struct {
+	dflt         string
+	strdest      *string
+	strslicedest *[]string
 }
 
 // The registered options
-var options map[string]option = map[string]option{}
+var options map[string]Option = map[string]Option{}
 
-// Flag creates a flag with the specified short and long forms.
-func Flag(shortform string, longform string, desc string) *bool {
+// Add adds the given option.
+func Add(opt Option) {
+	for _, form := range opt.Forms() {
+		options[form] = opt
+	}
+}
+
+// Flag creates a new Flag-type option, and adds it, returning the destination.
+func Flag(sform string, lform string, desc string) *bool {
 	dest := new(bool)
-	flag := option{
-		optType:     FLAG,
-		shortform:   "-" + shortform,
-		longform:    "--" + longform,
-		description: desc,
-		dflt:        "",
-		booldest:    dest,
+	o := flag{
+		genopt: genopt{
+			shortform:   sform,
+			longform:    lform,
+			description: desc,
+		},
+		dest: dest,
 	}
-	// insert the items into the map
-	options["-"+shortform] = flag
-	options["--"+longform] = flag
+	Add(o)
 	return dest
 }
 
-// Option creates an option with the specified short and long forms.
-func Option(shortform string, longform string, desc string, dflt string) *string {
-	dest := new(string)
-	*dest = dflt
-	opt := option{
-		optType:     OPTION,
-		shortform:   "-" + shortform,
-		longform:    "--" + longform,
-		description: desc,
-		dflt:        dflt,
-		strdest:     dest,
+// ShortFlag is like Flag, but no long form is used.
+func ShortFlag(sform string, desc string) *bool {
+	return Flag(sform, "", desc)
+}
+
+// LongFlag is like Flag, but no short form is used.
+func LongFlag(lform string, desc string) *bool {
+	return Flag("", lform, desc)
+}
+
+// Half creates a new Half-type option, and adds it, returning the destination.
+func Half(sform string, lform string, desc string, dflt string, gdflt string) *string {
+	dest := &dflt
+	o := half{
+		genopt: genopt{
+			shortform:   sform,
+			longform:    lform,
+			description: desc,
+		},
+		dest:      dest,
+		dflt:      dflt,
+		givendflt: gdflt,
 	}
-	// insert the items into the map
-	options["-"+shortform] = opt
-	options["--"+longform] = opt
+	Add(o)
 	return dest
 }
 
-// Multi creates an option that can be called multiple times.
-func Multi(shortform string, longform string, desc string, name string) *vector.StringVector {
+// Single creates a new Single-type option, and adds it, returning the destination.
+func Single(sform string, lform string, desc string, dflt string) *string {
+	dest := &dflt
+	o := single{
+		genopt: genopt{
+			shortform:   sform,
+			longform:    lform,
+			description: desc,
+		},
+		dest: dest,
+		dflt: dflt,
+	}
+	Add(o)
+	return dest
+}
+
+// Multi creates a new Multi-type option, and adds it, returning the destination.
+func Multi(sform string, lform string, desc string, valuedesc string) *vector.StringVector {
 	dest := &vector.StringVector{}
-	multi := option{
-		optType:     MULTI,
-		shortform:   "-" + shortform,
-		longform:    "--" + longform,
-		description: desc,
-		dflt:        name,
-		strvecdest:  dest,
+	o := multi{
+		genopt: genopt{
+			shortform:   sform,
+			longform:    lform,
+			description: desc,
+		},
+		dest: dest,
+		valuedesc: valuedesc,
 	}
-	// insert the items into the map
-	options["-"+shortform] = multi
-	options["--"+longform] = multi
+	Add(o)
 	return dest
 }
 
-// Shortflag creates a flag with no long form, only a short one.
-func Shortflag(shortform string, desc string) *bool {
-	return Flag(shortform, "", desc)
-}
-// Longflag ceates a flag with no short form, only a long one
-func Longflag(longform string, desc string) *bool {
-	return Flag("", longform, desc)
-}
-// Shortopt creates an option with no long form.
-func Shortopt(opt string, desc string, dflt string) *string {
-	return Option(opt, "", desc, dflt)
-}
-// Longopt creates an option with no short form.
-func Longopt(opt string, desc string, dflt string) *string {
-	return Option("", opt, desc, dflt)
-}
-// Shortmulti creates a multi with no long form.
-func Shortmulti(opt string, desc string, name string) *vector.StringVector {
-	return Multi(opt, "", desc, name)
-}
-// Longmulti creates a multi with no short form.
-func Longmulti(opt string, desc string, name string) *vector.StringVector {
-	return Multi("", opt, desc, name)
-}
+// True if the option list has been terminated by '-', false otherwise.
+var optsOver bool
 
-func invalidOption(opt string, optnum int) {
-	fmt.Printf("Unknown option: %s\n", opt)
-	os.Exit(1)
-}
-
-func needArgument(opt string) {
-	fmt.Printf("Argument required: %s\n", opt)
-	os.Exit(1)
-}
-
-var optsover bool
-
-func isOption(opt string) bool {
-	if opt[0] != '-' || optsover {
-		return false
-	}
-	return true
-}
-
-func assignValue(opt string, dest *string, place int) {
-	if place >= len(os.Args) || isOption(os.Args[place]) {
-		needArgument(opt)
-		os.Exit(1)
-	}
-	*dest = os.Args[place]
-}
-
-func pushValue(opt string, dest *vector.StringVector, place int) {
-	if place >= len(os.Args) || isOption(os.Args[place]) {
-		needArgument(opt)
-		os.Exit(1)
-	}
-	(*dest).Push(os.Args[place])
-}
-
-func handleOption(optnum int) int {
-	opt := os.Args[optnum]
-	if opt[1] == '-' {
-		// this is a single long argument
-		// get rid of any =
-		_opt := strings.Split(opt, "=", 2)
-		opt = _opt[0]
-		// check the flags list
-		if option, ok := options[opt]; ok {
-			switch {
-			case option.optType == FLAG:
-				*option.booldest = true
-			case option.optType == OPTION:
-				// get the next value
-				if len(_opt) > 1 {
-					*option.strdest = _opt[1]
-				} else {
-					needArgument(opt)
-				}
-			case option.optType == MULTI:
-				// get the next value
-				if len(_opt) > 1 {
-					option.strvecdest.Push(_opt[1])
-				} else {
-					needArgument(opt)
-				}
-			}
-			return 0
-		} else {
-			// This option doesn't exist
-			invalidOption(opt, optnum)
-		}
-	} else {
-		// this is a short argument
-		// for each option
-		for i := 1; i < len(opt); i++ {
-			o := "-" + string(opt[i])
-			option, ok := options[o]
-			if !ok {
-				invalidOption(o, optnum)
-			}
-			switch {
-			case option.optType == FLAG:
-				*option.booldest = true
-			case option.optType == OPTION && i == len(opt)-1:
-				assignValue(o, option.strdest, optnum+1)
-				return 1
-			case option.optType == OPTION && i != len(opt)-1:
-				needArgument(o)
-			case option.optType == MULTI && i == len(opt)-1:
-				pushValue(o, option.strvecdest, optnum+1)
-				return 1
-			case option.optType == MULTI && i != len(opt)-1:
-				needArgument(o)
-			}
-		}
-	}
-	return 0
-}
-
-var getHelp *bool
-
-// addHelp() the -h and --help options, if neither has been added yet. This is
-// called automatically when Parse() is called.
-func addHelp() {
-	_, ok := options["-h"]
-	_, ok2 := options["--help"]
-	if !(ok || ok2) {
-		getHelp = Flag("h", "help", "display help screen")
-	} else {
-		getHelp = new(bool)
-	}
-}
-
-// Parse performs POSIX and GNU option parsing, based on previously set settings
+// Parse performs parsing of the command line, making complete information
+// available to the program.
 func Parse() {
-	addHelp() // If not already done, add the help option
-	// for each argument
-	for i := 1; i < len(os.Args); i++ {
-		// check to see what type of argument
-		arg := os.Args[i]
-		if arg[0] == '-' && !optsover {
-			if len(arg) == 1 {
-				optsover = true
-			} else {
-				i += handleOption(i)
+	ParseArgs(os.Args)
+}
+
+// ParseArgs performs parsing of the given command line, making complete
+// information available to the program.
+//
+// This function was created specifically to enable unit testing - the proper
+// entry point for most programs is Parse.
+func ParseArgs(args []string) {
+	addHelp()
+	p := Parsing{}
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if len(arg) > 0 && arg[0] == '-' && !optsOver {
+			switch {
+			case len(arg) == 1:
+				// blank option - end option parsing
+				optsOver = true
+			case arg[1] == '-':
+				// long option
+				argparts := strings.Split(arg, "=", 2)
+				var val string
+				if len(argparts) == 2 {
+					arg, val = argparts[0], argparts[1]
+				}
+				if option, ok := options[arg]; ok {
+					switch {
+					case val == "" && option.Arg() != REQARG:
+						option.Invoke(val, p)
+					case val != "" && option.Arg() != NOARG:
+						option.Invoke(val, p)
+					case val == "" && option.Arg() == REQARG:
+						p.Error(REQARGERR, arg)
+					case val != "" && option.Arg() == NOARG:
+						p.Error(NOARGERR, arg)
+					}
+				} else {
+					p.Error(UNKNOWNERR, arg)
+				}
+			default:
+				// short option series
+				for j, optChar := range arg[1:len(arg)] {
+					opt := string(optChar)
+					if option, ok := options["-"+opt]; ok {
+						if option.ArgName() == "" {
+							option.Invoke("", p)
+							continue
+						}
+						// handle both -Oarg and -O arg
+						if j != len(arg)-2 {
+							val := arg[j+2 : len(arg)]
+							option.Invoke(val, p)
+							break
+						}
+						i++
+						if i < len(args) {
+							option.Invoke(args[i], p)
+						} else if option.Arg() == REQARG {
+							p.Error(REQARGERR, arg)
+						} else {
+							option.Invoke("", p)
+						}
+					} else {
+						p.Error(UNKNOWNERR, "-"+opt)
+					}
+				}
 			}
 		} else {
-			Args.Push(arg)
+			Args = Args[0 : len(Args)+1]
+			Args[len(Args)-1] = arg
 		}
 	}
-	// check if help was asked for
-	if *getHelp {
-		Help()
-		// and exit
-		os.Exit(0)
-	}
-}
-
-func printOption(w io.Writer, shortform string, longform string, description string, dflt string, value bool, multi bool) {
-	valappend := ""
-	switch {
-	case value && longform != "--":
-		valappend = fmt.Sprintf("=%s", dflt)
-	case value && longform == "--":
-		valappend = fmt.Sprintf(" %s", dflt)
-	}
-	if multi {
-		valappend += "..."
-	}
-	switch {
-	case shortform != "-" && longform != "--":
-		fmt.Fprintf(w, " %s,\t%s%s\t%s", shortform,
-			longform, valappend, description)
-	case shortform != "-" && longform == "--":
-		fmt.Fprintf(w, " %s%s\t\t%s", shortform, valappend, description)
-	case shortform == "-" && longform != "--":
-		fmt.Fprintf(w, " \t%s%s\t%s", longform, valappend, description)
-	}
-	fmt.Fprintf(w, "\n")
-}
-
-// Help prints a generated help screen, from the options previously passed
-func Help() {
-	fmt.Printf("%s\n%s\n", usage, description)
-	// a record of which options we've already printed
-	done := map[string]bool{}
-	// start formatting with the tabwriter
-	w := tabwriter.NewWriter(os.Stdout, 0, 2, 1, ' ', 0)
-	for str, opt := range options {
-		if !done[str] {
-			printOption(w,
-				opt.shortform, opt.longform,
-				opt.description,
-				opt.dflt, opt.optType != FLAG,
-				opt.optType == MULTI)
-		}
-		done[opt.shortform], done[opt.longform] = true, true
-	}
-	// flush the tabwriter
-	w.Flush()
 }

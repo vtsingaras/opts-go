@@ -1,6 +1,4 @@
 syntax:glob
 *.6
 *.a
-examples/hello
-examples/large
-examples/multi
+*.out
