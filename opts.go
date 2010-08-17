@@ -212,6 +212,16 @@ func Flag(sform string, lform string, desc string) *bool {
 	return dest
 }
 
+// ShortFlag is like Flag, but no long form is used.
+func ShortFlag(sform string, desc string) *bool {
+	return Flag(sform, "", desc)
+}
+
+// LongFlag is like Flag, but no short form is used.
+func LongFlag(lform string, desc string) *bool {
+	return Flag("", lform, desc)
+}
+
 // Half creates a new Half-type option, and adds it, returning the destination.
 func Half(sform string, lform string, desc string, dflt string, gdflt string) *string {
 	dest := &dflt
