@@ -62,7 +62,7 @@ func (Parsing) Error(err int, opt string) {
 				Xname, opt)
 		case REQARG:
 			fmt.Fprintf(os.Stderr,
-				"%s: %s: required argument\n",
+				"%s: %s: argument required\n",
 				Xname, opt)
 		case NOARG:
 			fmt.Fprintf(os.Stderr,
@@ -200,7 +200,7 @@ func Flag(sform string, lform string, desc string) *bool {
 
 // Half creates a new Half-type option, and adds it, returning the destination.
 func Half(sform string, lform string, desc string, dflt string, gdflt string) *string {
-	dest := new(string)
+	dest := &dflt
 	o := half {
 		genopt: genopt {
 			shortform: sform,
@@ -216,19 +216,27 @@ func Half(sform string, lform string, desc string, dflt string, gdflt string) *s
 }
 
 // Single creates a new Single-type option, and adds it, returning the destination.
-func Single(sform string, lform string, desc string) *bool {
-	dest := new(bool)
-	o := single{}
+func Single(sform string, lform string, desc string, dflt string) *string {
+	dest := &dflt
+	o := half {
+		genopt: genopt {
+			shortform: sform,
+			longform: lform,
+			description: desc,
+		},
+		dest: dest,
+		dflt: dflt,
+	}
 	Add(o)
 	return dest
 }
 
 // Multi creates a new Multi-type option, and adds it, returning the destination.
-func Multi(sform string, lform string, desc string) *bool {
-	dest := new(bool)
+func Multi(sform string, lform string, desc string, valuedesc string) *[]string {
+	dest := make([]string, 0)
 	o := multi{}
 	Add(o)
-	return dest
+	return &dest
 }
 
 // True if the option list has been terminated by '-', false otherwise.
@@ -291,7 +299,11 @@ func ParseArgs(args []string) {
 							break
 						}
 						i++
-						option.Invoke(args[i], p)
+						if i < len(arg) {
+							option.Invoke(args[i], p)
+						} else {
+							p.Error(REQARG, arg)
+						}
 					} else {
 						p.Error(UNKNOWN, "-"+opt)
 					}
