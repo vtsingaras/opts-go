@@ -7,7 +7,7 @@ package opts_test
 import (
 	"os"
 	"testing"
-	
+
 	. "opts"
 )
 

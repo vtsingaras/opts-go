@@ -14,4 +14,4 @@ opts.6: _go_.6
 	cp _go_.6 opts.6
 
 format:
-	${GOFMT} ${GOFILES}
+	${GOFMT} ${GOFILES} *_test.go

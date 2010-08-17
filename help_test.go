@@ -4,5 +4,4 @@
 
 package opts_test
 
-import (
-)
+import ()

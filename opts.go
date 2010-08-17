@@ -134,7 +134,7 @@ type flag struct {
 }
 
 func (flag) ArgName() string { return "" }
-func (o flag) Arg() int { return NOARG }
+func (o flag) Arg() int      { return NOARG }
 func (o flag) Invoke(string, Parsing) {
 	*o.dest = true
 }
@@ -147,7 +147,7 @@ type half struct {
 }
 
 func (o half) ArgName() string { return o.givendflt }
-func (o half) Arg() int { return OPTARG }
+func (o half) Arg() int        { return OPTARG }
 func (o half) Invoke(arg string, _ Parsing) {
 	if arg == "" {
 		*o.dest = o.givendflt
@@ -163,7 +163,7 @@ type single struct {
 }
 
 func (o single) ArgName() string { return o.dflt }
-func (o single) Arg() int { return REQARG }
+func (o single) Arg() int        { return REQARG }
 func (o single) Invoke(arg string, _ Parsing) {
 	*o.dest = arg
 }
@@ -175,7 +175,7 @@ type multi struct {
 }
 
 func (o multi) ArgName() string { return o.valuedesc }
-func (o multi) Arg() int { return REQARG }
+func (o multi) Arg() int        { return REQARG }
 func (o multi) Invoke(arg string, _ Parsing) {
 	(*o.dest).Push(arg)
 }
@@ -264,7 +264,7 @@ func Multi(sform string, lform string, desc string, valuedesc string) *vector.St
 			longform:    lform,
 			description: desc,
 		},
-		dest: dest,
+		dest:      dest,
 		valuedesc: valuedesc,
 	}
 	Add(o)
