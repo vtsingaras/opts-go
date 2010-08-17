@@ -246,11 +246,19 @@ func Single(sform string, lform string, desc string, dflt string) *string {
 }
 
 // Multi creates a new Multi-type option, and adds it, returning the destination.
-func Multi(sform string, lform string, desc string, valuedesc string) *[]string {
-	dest := make([]string, 0, 1)
-	o := multi{}
+func Multi(sform string, lform string, desc string, valuedesc string) *vector.StringVector {
+	dest := &vector.StringVector{}
+	o := multi{
+		genopt: genopt{
+			shortform:   sform,
+			longform:    lform,
+			description: desc,
+		},
+		dest: dest,
+		valuedesc: valuedesc,
+	}
 	Add(o)
-	return &dest
+	return dest
 }
 
 // True if the option list has been terminated by '-', false otherwise.
