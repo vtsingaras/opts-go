@@ -46,8 +46,8 @@ const (
 // The built-in types of errors.
 const (
 	UNKNOWN = iota // unknown option
-	REQARG // a required argument was not present
-	NOARG // an argument was present where none should have been
+	REQARG         // a required argument was not present
+	NOARG          // an argument was present where none should have been
 )
 
 // Parsing is a callback used by Option implementations to report errors.
@@ -56,19 +56,19 @@ type Parsing struct{}
 // Error prints the relevant error message and exits.
 func (Parsing) Error(err int, opt string) {
 	switch err {
-		case UNKNOWN:
-			fmt.Fprintf(os.Stderr, 
-				"%s: %s: unknown option\n",
-				Xname, opt)
-		case REQARG:
-			fmt.Fprintf(os.Stderr,
-				"%s: %s: argument required\n",
-				Xname, opt)
-		case NOARG:
-			fmt.Fprintf(os.Stderr,
-				"%s: %s takes no argument\n",
-				Xname, opt)
-			
+	case UNKNOWN:
+		fmt.Fprintf(os.Stderr,
+			"%s: %s: unknown option\n",
+			Xname, opt)
+	case REQARG:
+		fmt.Fprintf(os.Stderr,
+			"%s: %s: argument required\n",
+			Xname, opt)
+	case NOARG:
+		fmt.Fprintf(os.Stderr,
+			"%s: %s takes no argument\n",
+			Xname, opt)
+
 	}
 	os.Exit(1)
 }
@@ -76,7 +76,7 @@ func (Parsing) Error(err int, opt string) {
 // Option represents a conceptual option, which there may be multiple methods
 // of invoking.
 type Option interface {
-	// Forms returns a slice with all forms of this option. Forms that 
+	// Forms returns a slice with all forms of this option. Forms that
 	// begin with a single dash are interpreted as short options, multiple
 	// of which may be combined in one argument (-abcdef). Forms that begin
 	// with two dashes are interpreted as long options, which must remain
@@ -88,8 +88,8 @@ type Option interface {
 	// takes, or an empty string if this option takes none.
 	ArgName() string
 	// Invoke is called when this option appears in the command line.
-	// If the option expects an argument (as indicated by ArgName), 
-	// Invoke is guaranteed not to be called without one. Similarly, if 
+	// If the option expects an argument (as indicated by ArgName),
+	// Invoke is guaranteed not to be called without one. Similarly, if
 	// the option does not expect an argument, Invoke is guaranteed to be
 	// called only with the first parameter being the empty string.
 	Invoke(string, Parsing)
@@ -98,8 +98,8 @@ type Option interface {
 // A partial implementation of the Option interface that reflects what most
 // options share.
 type genopt struct {
-	shortform string
-	longform string
+	shortform   string
+	longform    string
 	description string
 }
 
@@ -110,7 +110,7 @@ func (o genopt) Forms() []string {
 		forms[0] = o.shortform
 	}
 	if len(o.longform) > 0 {
-		forms = forms[0:len(forms)+1]
+		forms = forms[0 : len(forms)+1]
 		forms[len(forms)-1] = o.longform
 	}
 	return forms
@@ -130,8 +130,8 @@ func (o flag) Invoke(string, Parsing) {
 
 type half struct {
 	genopt
-	dest *string
-	dflt string // the value if the option is not given
+	dest      *string
+	dflt      string // the value if the option is not given
 	givendflt string // the default value if the option is given
 }
 
@@ -158,7 +158,7 @@ func (o single) Invoke(arg string, _ Parsing) {
 type multi struct {
 	genopt
 	valuedesc string
-	dest *vector.StringVector
+	dest      *vector.StringVector
 }
 
 func (o multi) ArgName() string { return o.valuedesc }
@@ -168,8 +168,8 @@ func (o multi) Invoke(arg string, _ Parsing) {
 
 // Stores an option of any kind
 type option struct {
-	dflt        string
-	strdest     *string
+	dflt         string
+	strdest      *string
 	strslicedest *[]string
 }
 
@@ -179,17 +179,17 @@ var options map[string]Option = map[string]Option{}
 // Add adds the given option.
 func Add(opt Option) {
 	for _, form := range opt.Forms() {
-		options[form]=opt
+		options[form] = opt
 	}
 }
 
 // Flag creates a new Flag-type option, and adds it, returning the destination.
 func Flag(sform string, lform string, desc string) *bool {
 	dest := new(bool)
-	o := flag {
-		genopt: genopt {
-			shortform: sform,
-			longform: lform,
+	o := flag{
+		genopt: genopt{
+			shortform:   sform,
+			longform:    lform,
 			description: desc,
 		},
 		dest: dest,
@@ -201,15 +201,15 @@ func Flag(sform string, lform string, desc string) *bool {
 // Half creates a new Half-type option, and adds it, returning the destination.
 func Half(sform string, lform string, desc string, dflt string, gdflt string) *string {
 	dest := &dflt
-	o := half {
-		genopt: genopt {
-			shortform: sform,
-			longform: lform,
+	o := half{
+		genopt: genopt{
+			shortform:   sform,
+			longform:    lform,
 			description: desc,
 		},
-		dest: dest,
-		dflt: dflt,
-		givendflt:dflt,
+		dest:      dest,
+		dflt:      dflt,
+		givendflt: dflt,
 	}
 	Add(o)
 	return dest
@@ -218,10 +218,10 @@ func Half(sform string, lform string, desc string, dflt string, gdflt string) *s
 // Single creates a new Single-type option, and adds it, returning the destination.
 func Single(sform string, lform string, desc string, dflt string) *string {
 	dest := &dflt
-	o := half {
-		genopt: genopt {
-			shortform: sform,
-			longform: lform,
+	o := half{
+		genopt: genopt{
+			shortform:   sform,
+			longform:    lform,
 			description: desc,
 		},
 		dest: dest,
@@ -242,7 +242,7 @@ func Multi(sform string, lform string, desc string, valuedesc string) *[]string 
 // True if the option list has been terminated by '-', false otherwise.
 var optsOver bool
 
-// Parse performs parsing of the command line, making complete information 
+// Parse performs parsing of the command line, making complete information
 // available to the program.
 func Parse() {
 	ParseArgs(os.Args)
@@ -258,27 +258,27 @@ func ParseArgs(args []string) {
 	p := Parsing{}
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
-		if len(arg)>0 && arg[0]=='-' && !optsOver {
+		if len(arg) > 0 && arg[0] == '-' && !optsOver {
 			switch {
-			case len(arg)==1:
+			case len(arg) == 1:
 				// blank option - end option parsing
-				optsOver=true
-			case arg[1]=='-':
+				optsOver = true
+			case arg[1] == '-':
 				// long option
 				argparts := strings.Split(arg, "=", 2)
-				var  val string
+				var val string
 				if len(argparts) == 2 {
 					arg, val = argparts[0], argparts[1]
 				}
 				if option, ok := options[arg]; ok {
 					switch {
-					case val=="" && option.ArgName()=="":
-						option.Invoke(val,p)
-					case val!="" && option.ArgName()!="":
-						option.Invoke(val,p)
-					case val=="" && option.ArgName()!="":
+					case val == "" && option.ArgName() == "":
+						option.Invoke(val, p)
+					case val != "" && option.ArgName() != "":
+						option.Invoke(val, p)
+					case val == "" && option.ArgName() != "":
 						p.Error(REQARG, arg)
-					case val!="" && option.ArgName()=="":
+					case val != "" && option.ArgName() == "":
 						p.Error(NOARG, arg)
 					}
 				} else {
@@ -289,12 +289,12 @@ func ParseArgs(args []string) {
 				for j, optChar := range arg[1:len(arg)] {
 					opt := string(optChar)
 					if option, ok := options["-"+opt]; ok {
-						if option.ArgName()=="" {
+						if option.ArgName() == "" {
 							option.Invoke("", p)
 						}
 						// handle both -Oarg and -O arg
 						if j != len(arg)-2 {
-							val := arg[j+2:len(arg)]
+							val := arg[j+2 : len(arg)]
 							option.Invoke(val, p)
 							break
 						}
@@ -310,7 +310,7 @@ func ParseArgs(args []string) {
 				}
 			}
 		} else {
-			Args = Args[0:len(Args)+1]
+			Args = Args[0 : len(Args)+1]
 			Args[len(Args)-1] = arg
 		}
 	}
