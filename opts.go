@@ -199,9 +199,18 @@ func Flag(sform string, lform string, desc string) *bool {
 }
 
 // Half creates a new Half-type option, and adds it, returning the destination.
-func Half(sform string, lform string, desc string) *bool {
-	dest := new(bool)
-	o := half{}
+func Half(sform string, lform string, desc string, dflt string, gdflt string) *string {
+	dest := new(string)
+	o := half {
+		genopt: genopt {
+			shortform: sform,
+			longform: lform,
+			description: desc,
+		},
+		dest: dest,
+		dflt: dflt,
+		givendflt:dflt,
+	}
 	Add(o)
 	return dest
 }
@@ -244,8 +253,10 @@ func ParseArgs(args []string) {
 		if len(arg)>0 && arg[0]=='-' && !optsOver {
 			switch {
 			case len(arg)==1:
+				// blank option - end option parsing
 				optsOver=true
 			case arg[1]=='-':
+				// long option
 				argparts := strings.Split(arg, "=", 2)
 				var  val string
 				if len(argparts) == 2 {
@@ -266,14 +277,21 @@ func ParseArgs(args []string) {
 					p.Error(UNKNOWN, arg)
 				}
 			default:
-				for _, optChar := range arg[1:len(arg)] {
+				// short option series
+				for j, optChar := range arg[1:len(arg)] {
 					opt := string(optChar)
 					if option, ok := options["-"+opt]; ok {
 						if option.ArgName()=="" {
-							
-						} else {
-							
+							option.Invoke("", p)
 						}
+						// handle both -Oarg and -O arg
+						if j != len(arg)-2 {
+							val := arg[j+2:len(arg)]
+							option.Invoke(val, p)
+							break
+						}
+						i++
+						option.Invoke(args[i], p)
 					} else {
 						p.Error(UNKNOWN, "-"+opt)
 					}
