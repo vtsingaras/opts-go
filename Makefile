@@ -13,10 +13,5 @@ include $(GOROOT)/src/Make.pkg
 opts.6: _go_.6
 	cp _go_.6 opts.6
 
-sample: sample.go opts.6
-
-	6g -I . sample.go
-	6l -o sample sample.6
-
 format:
 	${GOFMT} ${GOFILES}
