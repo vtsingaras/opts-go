@@ -190,6 +190,22 @@ type option struct {
 // The registered options
 var options map[string]Option = map[string]Option{}
 
+// Adds - if there is none.
+func makeShort(s string) string {
+	if len(s) >= 1 && s[0]!='-' {
+		s="-"+s
+	}
+	return s
+}
+
+// Adds -- if there is none.
+func makeLong(s string) string {
+	if len(s) > 1 && s[0:1]!="--" {
+		s="--"+s
+	}
+	return s
+}
+
 // Add adds the given option.
 func Add(opt Option) {
 	for _, form := range opt.Forms() {
@@ -202,8 +218,8 @@ func Flag(sform string, lform string, desc string) *bool {
 	dest := new(bool)
 	o := flag{
 		genopt: genopt{
-			shortform:   sform,
-			longform:    lform,
+		shortform:   makeShort(sform),
+		longform:    makeLong(lform),
 			description: desc,
 		},
 		dest: dest,
@@ -227,8 +243,8 @@ func Half(sform string, lform string, desc string, dflt string, gdflt string) *s
 	dest := &dflt
 	o := half{
 		genopt: genopt{
-			shortform:   sform,
-			longform:    lform,
+		shortform:   makeShort(sform),
+		longform:    makeLong(lform),
 			description: desc,
 		},
 		dest:      dest,
@@ -244,8 +260,8 @@ func Single(sform string, lform string, desc string, dflt string) *string {
 	dest := &dflt
 	o := single{
 		genopt: genopt{
-			shortform:   sform,
-			longform:    lform,
+		shortform:   makeShort(sform),
+		longform:    makeLong(lform),
 			description: desc,
 		},
 		dest: dest,
@@ -260,8 +276,8 @@ func Multi(sform string, lform string, desc string, valuedesc string) *vector.St
 	dest := &vector.StringVector{}
 	o := multi{
 		genopt: genopt{
-			shortform:   sform,
-			longform:    lform,
+		shortform:   makeShort(sform),
+		longform:    makeLong(lform),
 			description: desc,
 		},
 		dest:      dest,
