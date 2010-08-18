@@ -22,7 +22,7 @@ import (
 var Xname = os.Args[0]
 
 // The list of optionless arguments provided
-var Args []string = make([]string, 0, len(os.Args))
+var Args []string = make([]string, 0, len(os.Args)-1)
 
 // A description of the program, which may be multiline
 var Description string
@@ -313,7 +313,7 @@ func Parse() {
 func ParseArgs(args []string) {
 	addHelp()
 	p := Parsing{}
-	for i := 0; i < len(args); i++ {
+	for i := 1; i < len(args); i++ {
 		arg := args[i]
 		if len(arg) > 0 && arg[0] == '-' && !optsOver {
 			switch {
