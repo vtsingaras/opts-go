@@ -190,6 +190,9 @@ type option struct {
 // The registered options
 var options map[string]Option = map[string]Option{}
 
+// A plain list of options, for when we need to hit each only once
+var optionList []Option = make([]Option, 0, 1)
+
 // Adds - if there is none.
 func makeShort(s string) string {
 	if len(s) >= 1 && s[0] != '-' {
@@ -209,6 +212,13 @@ func Add(opt Option) {
 	for _, form := range opt.Forms() {
 		options[form] = opt
 	}
+	if len(optionList)+1 > cap(optionList) {
+		old := optionList
+		optionList = make([]Option, 2*(len(old)+1))
+		copy(optionList, old)
+	}
+	optionList = optionList[0:len(optionList)+1]
+	optionList[len(optionList)-1]=opt
 }
 
 // Flag creates a new Flag-type option, and adds it, returning the destination.

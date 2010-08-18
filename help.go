@@ -36,9 +36,16 @@ func helpLines() (lines []string) {
 	hw := &helpWriter{}
 	// start formatting with the tabwriter
 	w := tabwriter.NewWriter(hw, 0, 2, 1, ' ', 0)
-	lines = strings.Split(hw.content, "\n", -1)
+	for _, opt := range optionList {
+		fmt.Print("  ")
+		if opt.Forms()[0] != "" {
+			fmt.Print(opt.Forms()[0]+",")
+		}
+		fmt.Print("\t")
+	}
 	w.Flush()
-	return
+	lines = strings.Split(hw.content, "\n", -1)
+	return lines
 }
 
 // Help prints a generated help screen, from the options previously passed
