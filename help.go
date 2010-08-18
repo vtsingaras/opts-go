@@ -11,9 +11,11 @@ import (
 	"tabwriter"
 )
 
+var printHelp *bool
+
 // addHelp adds the -h and --help options, if they do not already exist.
 func addHelp() {
-
+	printHelp = Flag("-h", "--help", "print help screen")
 }
 
 type helpWriter struct {
@@ -41,7 +43,7 @@ func helpLines() (lines []string) {
 
 // Help prints a generated help screen, from the options previously passed
 func Help() {
-	fmt.Printf("%s\n%s\n", Usage, Description)
+	fmt.Printf("usage: %s %s\n%s\n", Xname, Usage, Description)
 	// a record of which options we've already printed
 	done := map[string]bool{}
 	for name, opt := range options {

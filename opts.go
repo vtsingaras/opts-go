@@ -200,9 +200,7 @@ func makeShort(s string) string {
 
 // Adds -- if there is none.
 func makeLong(s string) string {
-	if len(s) > 1 && s[0:1] != "--" {
-		s = "--" + s
-	}
+	s = "--" + strings.TrimLeft(s,"-")
 	return s
 }
 
@@ -364,5 +362,9 @@ func ParseArgs(args []string) {
 			Args = Args[0 : len(Args)+1]
 			Args[len(Args)-1] = arg
 		}
+	}
+	if *printHelp {
+		Help()
+		os.Exit(0)
 	}
 }
