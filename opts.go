@@ -212,12 +212,13 @@ func Add(opt Option) {
 	for _, form := range opt.Forms() {
 		options[form] = opt
 	}
+	l := len(optionList)
 	if len(optionList)+1 > cap(optionList) {
 		old := optionList
 		optionList = make([]Option, 2*(len(old)+1))
 		copy(optionList, old)
 	}
-	optionList = optionList[0:len(optionList)+1]
+	optionList = optionList[0:l+1]
 	optionList[len(optionList)-1]=opt
 }
 
