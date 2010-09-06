@@ -316,6 +316,16 @@ func Multi(sform string, lform string, desc string, valuedesc string) *vector.St
 	return dest
 }
 
+// ShortMulti is like Multi, but no long form is used.
+func ShortMulti(sform string, desc string, valuedesc string) *vector.StringVector {
+	return Multi(sform, "", desc, valuedesc)
+}
+
+// LongMulti is like Multi, but no short form is used.
+func LongMulti(lform string, desc string, valuedesc string) *vector.StringVector {
+	return Multi("", lform, desc, valuedesc)
+}
+
 // True if the option list has been terminated by '-', false otherwise.
 var optsOver bool
 
