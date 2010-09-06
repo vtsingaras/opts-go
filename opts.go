@@ -290,6 +290,16 @@ func Single(sform string, lform string, desc string, dflt string) *string {
 	return dest
 }
 
+// ShortSingle is like Single, but no long form is used.
+func ShortSingle(sform string, desc string, dflt string) *string {
+	return Single(sform, "", desc, dflt)
+}
+
+// LongSingle is like Single, but no short form is used.
+func LongSingle(lform string, desc string, dflt string) *string {
+	return Single("", lform, desc, dflt)
+}
+
 // Multi creates a new Multi-type option, and adds it, returning the destination.
 func Multi(sform string, lform string, desc string, valuedesc string) *vector.StringVector {
 	dest := &vector.StringVector{}
