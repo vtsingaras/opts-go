@@ -264,6 +264,16 @@ func Half(sform string, lform string, desc string, dflt string, gdflt string) *s
 	return dest
 }
 
+// ShortHalf is like Half, but no long form is used.
+func ShortHalf(sform string, desc string, dflt string, gdflt string) *string {
+	return Half(sform, "", desc, dflt, gdflt)
+}
+
+// LongHalf is like Half, but no short form is used.
+func LongHalf(lform string, desc string, dflt string, gdflt string) *string {
+	return Half("", lform, desc, dflt, gdflt)
+}
+
 // Single creates a new Single-type option, and adds it, returning the destination.
 func Single(sform string, lform string, desc string, dflt string) *string {
 	dest := &dflt
